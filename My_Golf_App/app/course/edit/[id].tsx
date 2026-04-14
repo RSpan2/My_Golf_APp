@@ -14,7 +14,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { type Course, type Tee } from '@/constants/course';
+import { resolveDisplayTee, teesWithData, type Course, type Tee } from '@/constants/course';
 import { getCourseById, upsertCourse } from '@/services/courseStorage';
 
 const TEES: { key: Tee; label: string; color: string }[] = [
@@ -33,6 +33,7 @@ export default function EditCourseScreen() {
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
+  const [displayTee, setDisplayTee] = useState<Tee>('white');
   const [ratings, setRatings] = useState<Record<Tee, RatingFields>>({
     blue: { courseRating: '', slope: '' },
     white: { courseRating: '', slope: '' },
@@ -47,6 +48,7 @@ export default function EditCourseScreen() {
       setName(c.name);
       setCity(c.city);
       setState(c.state);
+      setDisplayTee(resolveDisplayTee(c));
       setRatings({
         blue: {
           courseRating: c.ratings.blue ? String(c.ratings.blue.courseRating) : '',
@@ -93,6 +95,7 @@ export default function EditCourseScreen() {
         city: city.trim(),
         state: state.trim().toUpperCase(),
         ratings: parsedRatings,
+        displayTee,
       });
       router.back();
     } catch {
@@ -124,7 +127,6 @@ export default function EditCourseScreen() {
             onChangeText={setName}
             placeholder="e.g. Augusta National"
             placeholderTextColor="#4b5563"
-            autoFocus
             returnKeyType="next"
           />
 
@@ -149,6 +151,31 @@ export default function EditCourseScreen() {
             maxLength={2}
             returnKeyType="done"
           />
+
+          {/* Display Tee */}
+          <Text style={styles.label}>Display Tee</Text>
+          <Text style={styles.hint}>Yardages shown for this tee on the course detail screen.</Text>
+          <View style={styles.teeRow}>
+            {TEES.filter(({ key }) =>
+              course ? teesWithData(course.holes).includes(key) : true
+            ).map(({ key, label, color }) => (
+              <Pressable
+                key={key}
+                style={[styles.teeBtn, displayTee === key && styles.teeBtnActive]}
+                onPress={() => setDisplayTee(key)}
+              >
+                <View style={[styles.teeDot, { backgroundColor: color }]} />
+                <Text style={[styles.teeBtnLabel, displayTee === key && styles.teeBtnLabelActive]}>
+                  {label}
+                </Text>
+              </Pressable>
+            ))}
+          </View>
+          {course && teesWithData(course.holes).length === 0 && (
+            <Text style={styles.noTeeHint}>
+              Add yardages to holes first, then select a display tee.
+            </Text>
+          )}
 
           {/* Tee Ratings */}
           <Text style={styles.label}>Tee Ratings</Text>
@@ -320,6 +347,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#2a2a2a',
     textAlign: 'center',
+  },
+  teeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  teeBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 10,
+    backgroundColor: '#1a1a1a',
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  teeBtnActive: {
+    borderColor: '#16a34a',
+    backgroundColor: '#0f2d1a',
+  },
+  teeBtnLabel: {
+    color: '#9ca3af',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  teeBtnLabelActive: {
+    color: '#4ade80',
+  },
+  noTeeHint: {
+    color: '#4b5563',
+    fontSize: 13,
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   bottomSpacer: {
     height: 40,

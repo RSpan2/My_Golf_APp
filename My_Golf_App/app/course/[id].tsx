@@ -6,7 +6,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import HoleEditor from '@/components/course/HoleEditor';
-import { type Course, type Hole } from '@/constants/course';
+import { resolveDisplayTee, type Course, type Hole, type Tee } from '@/constants/course';
 import { deleteCourse, getCourseById, upsertCourse } from '@/services/courseStorage';
 
 export default function CourseDetailScreen() {
@@ -36,8 +36,10 @@ export default function CourseDetailScreen() {
     router.back();
   };
 
+  const displayTee = course ? resolveDisplayTee(course) : 'white';
+  const displayTeeLabel = displayTee.charAt(0).toUpperCase() + displayTee.slice(1);
   const totalPar = course?.holes.reduce((sum, h) => sum + h.par, 0) ?? 0;
-  const totalWhiteYards = course?.holes.reduce((sum, h) => sum + (h.yardages.white ?? 0), 0) ?? 0;
+  const totalDisplayYards = course?.holes.reduce((sum, h) => sum + (h.yardages[displayTee] ?? 0), 0) ?? 0;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -78,9 +80,9 @@ export default function CourseDetailScreen() {
             <View style={styles.summaryDivider} />
             <View style={styles.summaryChip}>
               <Text style={styles.summaryValue}>
-                {totalWhiteYards > 0 ? totalWhiteYards.toLocaleString() : '—'}
+                {totalDisplayYards > 0 ? totalDisplayYards.toLocaleString() : '—'}
               </Text>
-              <Text style={styles.summaryLabel}>White Yds</Text>
+              <Text style={styles.summaryLabel}>{displayTeeLabel} Yds</Text>
             </View>
           </View>
 
@@ -88,7 +90,7 @@ export default function CourseDetailScreen() {
           <View style={styles.columnHeader}>
             <Text style={[styles.colLabel, styles.colHole]}>Hole</Text>
             <Text style={[styles.colLabel, styles.colPar]}>Par</Text>
-            <Text style={[styles.colLabel, styles.colYards]}>Yards</Text>
+            <Text style={[styles.colLabel, styles.colYards]}>{displayTeeLabel} Yds</Text>
             <Text style={[styles.colLabel, styles.colHdcp]}>Hdcp</Text>
           </View>
 
@@ -104,7 +106,7 @@ export default function CourseDetailScreen() {
                 </View>
                 <Text style={[styles.cell, styles.colPar]}>{hole.par}</Text>
                 <Text style={[styles.cell, styles.colYards]}>
-                  {hole.yardages.white !== undefined ? hole.yardages.white : '—'}
+                  {hole.yardages[displayTee] !== undefined ? hole.yardages[displayTee] : '—'}
                 </Text>
                 <Text style={[styles.cell, styles.colHdcp]}>{hole.handicapIndex}</Text>
                 <Ionicons name="chevron-forward" size={14} color="#374151" />

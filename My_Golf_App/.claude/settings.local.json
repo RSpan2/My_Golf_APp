@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:api.github.com)",
+      "Bash(grep -E \"\\\\.\\(tsx|ts|js|json\\)$\")",
+      "Bash(npx expo:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

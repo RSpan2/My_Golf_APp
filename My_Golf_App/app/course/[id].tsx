@@ -1,31 +1,46 @@
 import { useEffect, useState } from 'react';
-import { Alert, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { type Course } from '@/constants/course';
-import { deleteCourse, getCourseById } from '@/services/courseStorage';
+import HoleEditor from '@/components/course/HoleEditor';
+import { type Course, type Hole } from '@/constants/course';
+import { deleteCourse, getCourseById, upsertCourse } from '@/services/courseStorage';
 
 export default function CourseDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const [course, setCourse] = useState<Course | null>(null);
+  const [editingHole, setEditingHole] = useState<Hole | null>(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     getCourseById(id).then((c) => setCourse(c ?? null));
   }, [id]);
 
+  const handleHoleSave = async (updated: Hole) => {
+    if (!course) return;
+    const updatedCourse: Course = {
+      ...course,
+      holes: course.holes.map((h) => (h.number === updated.number ? updated : h)),
+    };
+    setCourse(updatedCourse);
+    setEditingHole(null);
+    await upsertCourse(updatedCourse);
+  };
+
   const handleDelete = async () => {
     await deleteCourse(id);
     router.back();
   };
 
+  const totalPar = course?.holes.reduce((sum, h) => sum + h.par, 0) ?? 0;
+  const totalWhiteYards = course?.holes.reduce((sum, h) => sum + (h.yardages.white ?? 0), 0) ?? 0;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => router.back()} hitSlop={10}>
           <Ionicons name="chevron-back" size={24} color="#ffffff" />
@@ -33,26 +48,82 @@ export default function CourseDetailScreen() {
         <Text style={styles.headerTitle} numberOfLines={1}>
           {course?.name ?? ''}
         </Text>
-        <Pressable onPress={() => setShowDeleteModal(true)} hitSlop={10}>
-          <Ionicons name="trash-outline" size={22} color="#ef4444" />
-        </Pressable>
+        <View style={styles.headerRight}>
+          <Pressable
+            onPress={() => router.push({ pathname: '/course/edit/[id]', params: { id } })}
+            hitSlop={10}
+            style={styles.headerBtn}
+          >
+            <Ionicons name="pencil-outline" size={20} color="#9ca3af" />
+          </Pressable>
+          <Pressable onPress={() => setShowDeleteModal(true)} hitSlop={10}>
+            <Ionicons name="trash-outline" size={20} color="#ef4444" />
+          </Pressable>
+        </View>
       </View>
 
-      {/* Body — placeholder until Story 1.2 */}
-      <View style={styles.body}>
-        {course ? (
-          <>
-            <Text style={styles.courseName}>{course.name}</Text>
-            {(course.city || course.state) ? (
-              <Text style={styles.courseLocation}>
-                {[course.city, course.state].filter(Boolean).join(', ')}
+      {course && (
+        <>
+          {/* Summary strip */}
+          <View style={styles.summaryStrip}>
+            <View style={styles.summaryChip}>
+              <Text style={styles.summaryValue}>{course.holes.length}</Text>
+              <Text style={styles.summaryLabel}>Holes</Text>
+            </View>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryChip}>
+              <Text style={styles.summaryValue}>{totalPar}</Text>
+              <Text style={styles.summaryLabel}>Par</Text>
+            </View>
+            <View style={styles.summaryDivider} />
+            <View style={styles.summaryChip}>
+              <Text style={styles.summaryValue}>
+                {totalWhiteYards > 0 ? totalWhiteYards.toLocaleString() : '—'}
               </Text>
-            ) : null}
-            <Text style={styles.holeCount}>{course.holes.length} holes</Text>
-            <Text style={styles.comingSoon}>Hole details coming in Story 1.2</Text>
-          </>
-        ) : null}
-      </View>
+              <Text style={styles.summaryLabel}>White Yds</Text>
+            </View>
+          </View>
+
+          {/* Column headers */}
+          <View style={styles.columnHeader}>
+            <Text style={[styles.colLabel, styles.colHole]}>Hole</Text>
+            <Text style={[styles.colLabel, styles.colPar]}>Par</Text>
+            <Text style={[styles.colLabel, styles.colYards]}>Yards</Text>
+            <Text style={[styles.colLabel, styles.colHdcp]}>Hdcp</Text>
+          </View>
+
+          <ScrollView style={styles.list}>
+            {course.holes.map((hole) => (
+              <Pressable
+                key={hole.number}
+                style={({ pressed }) => [styles.holeRow, pressed && styles.holeRowPressed]}
+                onPress={() => setEditingHole(hole)}
+              >
+                <View style={styles.holeNumberBadge}>
+                  <Text style={styles.holeNumber}>{hole.number}</Text>
+                </View>
+                <Text style={[styles.cell, styles.colPar]}>{hole.par}</Text>
+                <Text style={[styles.cell, styles.colYards]}>
+                  {hole.yardages.white !== undefined ? hole.yardages.white : '—'}
+                </Text>
+                <Text style={[styles.cell, styles.colHdcp]}>{hole.handicapIndex}</Text>
+                <Ionicons name="chevron-forward" size={14} color="#374151" />
+              </Pressable>
+            ))}
+            <View style={styles.bottomSpacer} />
+          </ScrollView>
+        </>
+      )}
+
+      {/* Hole Editor modal */}
+      {editingHole && (
+        <HoleEditor
+          visible={!!editingHole}
+          hole={editingHole}
+          onSave={handleHoleSave}
+          onClose={() => setEditingHole(null)}
+        />
+      )}
 
       {/* Delete confirmation modal */}
       <Modal
@@ -112,36 +183,105 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginHorizontal: 8,
   },
-  body: {
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  headerBtn: {},
+  summaryStrip: {
+    flexDirection: 'row',
+    backgroundColor: '#111111',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
+  },
+  summaryChip: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 32,
+    paddingVertical: 12,
   },
-  courseName: {
+  summaryValue: {
     color: '#ffffff',
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: '700',
-    textAlign: 'center',
   },
-  courseLocation: {
+  summaryLabel: {
     color: '#6b7280',
-    fontSize: 15,
-    marginTop: 6,
+    fontSize: 11,
+    marginTop: 2,
   },
-  holeCount: {
-    color: '#16a34a',
-    fontSize: 14,
+  summaryDivider: {
+    width: 1,
+    backgroundColor: '#2a2a2a',
+    marginVertical: 10,
+  },
+  columnHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderBottomWidth: 1,
+    borderBottomColor: '#1f1f1f',
+  },
+  colLabel: {
+    color: '#4b5563',
+    fontSize: 11,
     fontWeight: '600',
-    marginTop: 8,
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
-  comingSoon: {
-    color: '#374151',
-    fontSize: 13,
-    marginTop: 32,
+  colHole: {
+    width: 48,
+  },
+  colPar: {
+    width: 48,
     textAlign: 'center',
   },
-  // Modal
+  colYards: {
+    flex: 1,
+    textAlign: 'right',
+  },
+  colHdcp: {
+    width: 52,
+    textAlign: 'right',
+    marginRight: 20,
+  },
+  list: {
+    flex: 1,
+  },
+  holeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 13,
+    borderBottomWidth: 1,
+    borderBottomColor: '#161616',
+  },
+  holeRowPressed: {
+    backgroundColor: '#161616',
+  },
+  holeNumberBadge: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: '#242424',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+  holeNumber: {
+    color: '#9ca3af',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  cell: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '500',
+  },
+  bottomSpacer: {
+    height: 32,
+  },
   overlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.6)',

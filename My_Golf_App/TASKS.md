@@ -16,102 +16,107 @@ Hierarchy: **Epic → Story → Task → Step** (smallest unit)
 
 ---
 
-## Story 1.1: User can create a golf course
+## Story 1.1: User can create a golf course ✅
 
 ### Task 1.1.1: Define course data types (`constants/course.ts`)
 > *As a developer, I want a shared Course and Hole type definition so that every part of the app works with a consistent, type-safe data structure.*
-- [ ] Create `constants/course.ts` file
-- [ ] Define `Tee` union type: `'blue' | 'white' | 'red' | 'gold'`
-- [ ] Define `TeeRatings` interface: `{ courseRating: number; slope: number }`
-- [ ] Define `HoleYardages` interface: `{ blue?: number; white?: number; red?: number; gold?: number }`
-- [ ] Define `Hole` interface with fields: `number`, `par`, `yardages`, `handicapIndex`
-- [ ] Define `Course` interface with fields: `id`, `name`, `city`, `state`, `holes`, `isHome`, `ratings` (per tee)
-- [ ] Export all types
+- [x] Create `constants/course.ts` file
+- [x] Define `Tee` union type: `'blue' | 'white' | 'red' | 'gold'`
+- [x] Define `TeeRatings` interface: `{ courseRating: number; slope: number }`
+- [x] Define `HoleYardages` interface: `{ blue?: number; white?: number; red?: number; gold?: number }`
+- [x] Define `Hole` interface with fields: `number`, `par`, `yardages`, `handicapIndex`
+- [x] Define `Course` interface with fields: `id`, `name`, `city`, `state`, `holes`, `isHome`, `ratings` (per tee)
+- [x] Export all types
 
 ### Task 1.1.2: Create course storage service (`services/courseStorage.ts`)
 > *As a golfer, I want my courses saved to my device so that I don't have to re-enter them every time I open the app.*
-- [ ] Create `services/courseStorage.ts` file
-- [ ] Define `COURSES_KEY` and `ROUNDS_KEY` AsyncStorage constants
-- [ ] Write `loadCourses(): Promise<Course[]>` — parse JSON or return `[]`
-- [ ] Write `saveCourses(courses: Course[]): Promise<void>` — stringify and store
-- [ ] Write `getCourseById(id: string): Promise<Course | undefined>`
-- [ ] Write `deleteCourse(id: string): Promise<void>` — filter and re-save
-- [ ] Export all functions
+- [x] Create `services/courseStorage.ts` file
+- [x] Define `COURSES_KEY` AsyncStorage constant
+- [x] Write `loadCourses(): Promise<Course[]>` — parse JSON or return `[]`
+- [x] Write `saveCourses(courses: Course[]): Promise<void>` — stringify and store
+- [x] Write `getCourseById(id: string): Promise<Course | undefined>`
+- [x] Write `upsertCourse(course: Course): Promise<void>` — add or replace by id
+- [x] Write `deleteCourse(id: string): Promise<void>` — filter and re-save
+- [x] Export all functions
 
 ### Task 1.1.3: Build Add Course screen (`app/course/new.tsx`)
 > *As a golfer, I want to add a new course by entering its name, city, and state so that I can track rounds played there.*
-- [ ] Create `app/course/new.tsx` file
-- [ ] Add `SafeAreaView` container with dark background
-- [ ] Add header with back button and "New Course" title
-- [ ] Add `TextInput` for course name
-- [ ] Add `TextInput` for city
-- [ ] Add `TextInput` for state (2-char, auto-caps)
-- [ ] Add number of holes selector (9 or 18, default 18)
-- [ ] On save: generate `uuid`-style id (`Date.now().toString()`)
-- [ ] On save: build default holes array (all par 4, yardages 0, handicapIndex 1–18)
-- [ ] On save: call `saveCourses` and navigate back
-- [ ] Disable save button if course name is empty
-- [ ] Style all elements with `StyleSheet` matching design system
+- [x] Create `app/course/new.tsx` file
+- [x] Add `SafeAreaView` container with dark background
+- [x] Add header with back button and "New Course" title
+- [x] Add `TextInput` for course name
+- [x] Add `TextInput` for city
+- [x] Add `TextInput` for state (2-char, auto-caps)
+- [x] Add number of holes selector (9 or 18, default 18)
+- [x] On save: generate id (`Date.now().toString()`)
+- [x] On save: build default holes array (all par 4, yardages empty, handicapIndex 1–count)
+- [x] On save: call `upsertCourse` and navigate back
+- [x] Disable save button if course name is empty
+- [x] Style all elements with `StyleSheet` matching design system
 
 ### Task 1.1.4: Build My Courses screen (`app/(tabs)/courses.tsx`)
 > *As a golfer, I want to see all my saved courses in one place so that I can quickly pick one when starting a round.*
-- [ ] Create `app/(tabs)/courses.tsx` file
-- [ ] Add `SafeAreaView` container
-- [ ] Add header with "Courses" title and "+" add button
-- [ ] Load courses on focus with `useFocusEffect`
-- [ ] Render empty state if no courses saved
-- [ ] Render each course as a card (name, city/state, hole count)
-- [ ] Tap card → navigate to `app/course/[id].tsx`
-- [ ] Tap "+" → navigate to `app/course/new.tsx`
-- [ ] Style with `StyleSheet` matching design system
+- [x] Create `app/(tabs)/courses.tsx` file
+- [x] Add `SafeAreaView` container
+- [x] Add header with "Courses" title and "+" add button
+- [x] Load courses on focus with `useFocusEffect`
+- [x] Render empty state if no courses saved
+- [x] Render each course as a card (name, city/state, hole count)
+- [x] Tap card → navigate to `app/course/[id].tsx`
+- [x] Tap "+" → navigate to `app/course/new.tsx`
+- [x] Style with `StyleSheet` matching design system
 
 ### Task 1.1.5: Register Courses tab in navigation (`app/(tabs)/_layout.tsx`)
 > *As a golfer, I want a Courses tab in the main navigation so that I can access my courses without hunting through menus.*
-- [ ] Open `app/(tabs)/_layout.tsx`
-- [ ] Add a third `Tabs.Screen` entry for `courses`
-- [ ] Set tab icon (`map-outline` from Ionicons)
-- [ ] Set tab label "Courses"
+- [x] Open `app/(tabs)/_layout.tsx`
+- [x] Add a third `Tabs.Screen` entry for `courses`
+- [x] Set tab icon (`map-outline` from Ionicons)
+- [x] Set tab label "Courses"
+
+### Bonus: Delete course from detail screen
+- [x] Trash icon in header of `app/course/[id].tsx`
+- [x] Confirmation modal before deleting
+- [x] Navigates back to courses list on confirm
 
 ---
 
-## Story 1.2: User can view and edit hole details
+## Story 1.2: User can view and edit hole details ✅
 
 ### Task 1.2.1: Build Course Detail screen (`app/course/[id].tsx`)
 > *As a golfer, I want to see all 18 holes for a course at a glance so that I know what data is entered and what still needs to be filled in.*
-- [ ] Create `app/course/[id].tsx` file
-- [ ] Load course by `id` param on mount
-- [ ] Add header: back button, course name, "Edit" button
-- [ ] Show summary row: total yardage (white tee), total par, number of holes
-- [ ] Render list of 18 holes, each showing hole number, par, white yardage
-- [ ] Tap a hole row → open Hole Editor modal
-- [ ] Style with `StyleSheet` matching design system
+- [x] Create `app/course/[id].tsx` file
+- [x] Load course by `id` param on mount
+- [x] Add header: back button, course name, edit + delete buttons
+- [x] Show summary strip: hole count, total par, total white yardage
+- [x] Render list of holes, each showing hole number, par, white yardage, handicap index
+- [x] Tap a hole row → open Hole Editor modal
+- [x] Style with `StyleSheet` matching design system
 
 ### Task 1.2.2: Build Hole Editor modal (`components/course/HoleEditor.tsx`)
 > *As a golfer, I want to set the par, yardage, and handicap index for each hole so that my scorecard and club recommendations are accurate.*
-- [ ] Create `components/course/` directory
-- [ ] Create `components/course/HoleEditor.tsx`
-- [ ] Accept props: `hole`, `onSave(updatedHole)`, `onClose`, `visible`
-- [ ] Show hole number in header
-- [ ] Add Par selector: 3-button toggle (3 / 4 / 5), highlight active
-- [ ] Add yardage inputs for each tee: Blue, White, Red, Gold (number pad)
-- [ ] Add Handicap Index input: number 1–18
-- [ ] "Save" button calls `onSave` and closes
-- [ ] "Cancel" button discards changes and closes
-- [ ] Style with `StyleSheet` matching design system
+- [x] Create `components/course/` directory
+- [x] Create `components/course/HoleEditor.tsx`
+- [x] Accept props: `hole`, `onSave(updatedHole)`, `onClose`, `visible`
+- [x] Show hole number in header
+- [x] Add Par selector: 3-button toggle (3 / 4 / 5), highlight active
+- [x] Add yardage inputs for each tee: Blue, White, Red, Gold (number pad)
+- [x] Add Handicap Index input: number 1–18 (clamped on save)
+- [x] "Save Hole" button calls `onSave` and closes
+- [x] "Cancel" button discards changes and closes
+- [x] Style with `StyleSheet` matching design system
 
 ### Task 1.2.3: Wire Hole Editor save back to storage
 > *As a golfer, I want my hole edits to persist immediately so that I never lose data I've already entered.*
-- [ ] In `app/course/[id].tsx`, maintain local `course` state
-- [ ] On `HoleEditor` save: replace hole in `course.holes` array by index
-- [ ] Call `saveCourses` with updated course
-- [ ] Re-render course detail list to reflect changes
+- [x] In `app/course/[id].tsx`, maintain local `course` state
+- [x] On `HoleEditor` save: replace hole in `course.holes` array by hole number
+- [x] Call `upsertCourse` with updated course
+- [x] Re-render course detail list to reflect changes
 
-### Task 1.2.4: Build Course Edit screen (name/city/state/ratings)
+### Task 1.2.4: Build Course Edit screen (name/city/state)
 > *As a golfer, I want to edit a course's name, location, and tee ratings so that I can fix mistakes and keep course data up to date.*
-- [ ] Add edit form fields for course name, city, state
-- [ ] Add rating inputs per tee: Course Rating (decimal, e.g. 72.4) and Slope Rating (integer)
-- [ ] Show only tees that have at least one yardage entered
-- [ ] Save updates to storage on submit
+- [x] Create `app/course/edit/[id].tsx` with form fields for course name, city, state
+- [x] Save updates to storage on submit
+- [ ] Rating inputs per tee (Course Rating + Slope) — deferred to Epic 2
 
 ---
 
@@ -279,6 +284,37 @@ Hierarchy: **Epic → Story → Task → Step** (smallest unit)
 - [ ] Add "Delete Course" option on Course Detail screen
 - [ ] If course has rounds attached, show warning: "X rounds will also be deleted"
 - [ ] On confirm: delete course and all associated rounds
+
+---
+
+## Story 1.8: User can view course statistics
+
+> Stats are computed on-the-fly from completed rounds (filtered by `courseId`). No extra storage — derived from existing round data when the course detail screen loads.
+
+### Task 1.8.1: Compute per-course stats from round history
+> *As a golfer, I want to see how many times I've played a course and what I typically score there so that I can track my improvement on that specific course.*
+- [ ] In `app/course/[id].tsx`, load all completed rounds on focus using `useFocusEffect`
+- [ ] Filter rounds by `courseId === id`
+- [ ] Compute:
+  - `timesPlayed` — count of matching rounds
+  - `averageScore` — mean total score vs par across all rounds (e.g. "+4.2")
+  - `bestRound` — lowest score vs par across all rounds
+- [ ] Show a stats strip below the summary strip (only visible when `timesPlayed > 0`)
+- [ ] Hide stats strip entirely if course has never been played
+
+### Task 1.8.2: Show average score per hole
+> *As a golfer, I want to see my average score on each hole so that I know which holes are hurting me the most.*
+- [ ] For each hole, compute average score across all rounds where that hole was played (score > 0)
+- [ ] Display average next to each hole row in the hole list (e.g. "avg +1.2" or color-coded chip)
+- [ ] Use the same color coding as the scorecard: eagle=gold, birdie=green, par=white, bogey=yellow, double+=red
+- [ ] Show "—" if the hole has never been scored
+
+### Task 1.8.3: Show round count on Courses list card
+> *As a golfer, I want to see at a glance how many times I've played each course so that I can quickly find my most-played courses.*
+- [ ] In `app/(tabs)/courses.tsx`, load rounds alongside courses on focus
+- [ ] For each course card, compute round count from rounds filtered by `courseId`
+- [ ] Display round count as a secondary badge on the card (e.g. "5 rounds" in muted text)
+- [ ] Hide if count is 0
 
 ---
 
@@ -743,4 +779,5 @@ Hierarchy: **Epic → Story → Task → Step** (smallest unit)
 
 ## Completed
 
-_Nothing completed yet._
+- **Story 1.1** — User can create a golf course (`constants/course.ts`, `services/courseStorage.ts`, `app/(tabs)/courses.tsx`, `app/course/new.tsx`, `app/course/[id].tsx`)
+- **Story 1.2** — User can view and edit hole details (`components/course/HoleEditor.tsx`, `app/course/[id].tsx` full impl, `app/course/edit/[id].tsx`)

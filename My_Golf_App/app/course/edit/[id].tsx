@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -12,10 +12,10 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { buildDefaultHoles, type Course, type Tee } from '@/constants/course';
-import { upsertCourse } from '@/services/courseStorage';
+import { type Course, type Tee } from '@/constants/course';
+import { getCourseById, upsertCourse } from '@/services/courseStorage';
 
 const TEES: { key: Tee; label: string; color: string }[] = [
   { key: 'blue', label: 'Blue', color: '#3b82f6' },
@@ -26,29 +26,56 @@ const TEES: { key: Tee; label: string; color: string }[] = [
 
 type RatingFields = { courseRating: string; slope: string };
 
-const emptyRating = (): RatingFields => ({ courseRating: '', slope: '' });
-
-export default function NewCourseScreen() {
+export default function EditCourseScreen() {
   const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [course, setCourse] = useState<Course | null>(null);
   const [name, setName] = useState('');
   const [city, setCity] = useState('');
   const [state, setState] = useState('');
-  const [holeCount, setHoleCount] = useState<9 | 18>(18);
   const [ratings, setRatings] = useState<Record<Tee, RatingFields>>({
-    blue: emptyRating(),
-    white: emptyRating(),
-    red: emptyRating(),
-    gold: emptyRating(),
+    blue: { courseRating: '', slope: '' },
+    white: { courseRating: '', slope: '' },
+    red: { courseRating: '', slope: '' },
+    gold: { courseRating: '', slope: '' },
   });
 
-  const canNext = name.trim().length > 0;
+  useEffect(() => {
+    getCourseById(id).then((c) => {
+      if (!c) return;
+      setCourse(c);
+      setName(c.name);
+      setCity(c.city);
+      setState(c.state);
+      setRatings({
+        blue: {
+          courseRating: c.ratings.blue ? String(c.ratings.blue.courseRating) : '',
+          slope: c.ratings.blue ? String(c.ratings.blue.slope) : '',
+        },
+        white: {
+          courseRating: c.ratings.white ? String(c.ratings.white.courseRating) : '',
+          slope: c.ratings.white ? String(c.ratings.white.slope) : '',
+        },
+        red: {
+          courseRating: c.ratings.red ? String(c.ratings.red.courseRating) : '',
+          slope: c.ratings.red ? String(c.ratings.red.slope) : '',
+        },
+        gold: {
+          courseRating: c.ratings.gold ? String(c.ratings.gold.courseRating) : '',
+          slope: c.ratings.gold ? String(c.ratings.gold.slope) : '',
+        },
+      });
+    });
+  }, [id]);
+
+  const canSave = name.trim().length > 0;
 
   const updateRating = (tee: Tee, field: keyof RatingFields, value: string) => {
     setRatings((prev) => ({ ...prev, [tee]: { ...prev[tee], [field]: value } }));
   };
 
-  const handleNext = async () => {
-    if (!canNext) return;
+  const handleSave = async () => {
+    if (!course || !canSave) return;
 
     const parsedRatings: Course['ratings'] = {};
     for (const { key } of TEES) {
@@ -59,19 +86,15 @@ export default function NewCourseScreen() {
       }
     }
 
-    const course: Course = {
-      id: Date.now().toString(),
-      name: name.trim(),
-      city: city.trim(),
-      state: state.trim().toUpperCase(),
-      holes: buildDefaultHoles(holeCount),
-      isHome: false,
-      ratings: parsedRatings,
-    };
-
     try {
-      await upsertCourse(course);
-      router.replace({ pathname: '/course/setup/[id]', params: { id: course.id } });
+      await upsertCourse({
+        ...course,
+        name: name.trim(),
+        city: city.trim(),
+        state: state.trim().toUpperCase(),
+        ratings: parsedRatings,
+      });
+      router.back();
     } catch {
       // Storage failure — stay on screen
     }
@@ -87,9 +110,9 @@ export default function NewCourseScreen() {
           <Pressable onPress={() => router.back()} hitSlop={10}>
             <Ionicons name="chevron-back" size={24} color="#ffffff" />
           </Pressable>
-          <Text style={styles.headerTitle}>New Course</Text>
-          <Pressable onPress={handleNext} disabled={!canNext} hitSlop={10}>
-            <Text style={[styles.nextBtn, !canNext && styles.nextBtnDisabled]}>Next</Text>
+          <Text style={styles.headerTitle}>Edit Course</Text>
+          <Pressable onPress={handleSave} disabled={!canSave} hitSlop={10}>
+            <Text style={[styles.saveBtn, !canSave && styles.saveBtnDisabled]}>Save</Text>
           </Pressable>
         </View>
 
@@ -127,24 +150,9 @@ export default function NewCourseScreen() {
             returnKeyType="done"
           />
 
-          <Text style={styles.label}>Number of Holes</Text>
-          <View style={styles.toggleRow}>
-            {([9, 18] as const).map((count) => (
-              <Pressable
-                key={count}
-                style={[styles.toggleButton, holeCount === count && styles.toggleButtonActive]}
-                onPress={() => setHoleCount(count)}
-              >
-                <Text style={[styles.toggleText, holeCount === count && styles.toggleTextActive]}>
-                  {count}
-                </Text>
-              </Pressable>
-            ))}
-          </View>
-
           {/* Tee Ratings */}
-          <Text style={styles.label}>Tee Ratings (Optional)</Text>
-          <Text style={styles.hint}>Used for handicap calculations. You can fill these in later.</Text>
+          <Text style={styles.label}>Tee Ratings</Text>
+          <Text style={styles.hint}>Used for handicap calculations.</Text>
           <View style={styles.ratingsTable}>
             <View style={styles.ratingsHeaderRow}>
               <View style={styles.ratingsTeCol} />
@@ -212,12 +220,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '700',
   },
-  nextBtn: {
+  saveBtn: {
     color: '#16a34a',
     fontSize: 16,
     fontWeight: '600',
   },
-  nextBtnDisabled: {
+  saveBtnDisabled: {
     color: '#374151',
   },
   scroll: {
@@ -252,30 +260,6 @@ const styles = StyleSheet.create({
   },
   inputShort: {
     width: 80,
-  },
-  toggleRow: {
-    flexDirection: 'row',
-    gap: 10,
-  },
-  toggleButton: {
-    paddingHorizontal: 28,
-    paddingVertical: 12,
-    borderRadius: 12,
-    backgroundColor: '#1a1a1a',
-    borderWidth: 1,
-    borderColor: '#2a2a2a',
-  },
-  toggleButtonActive: {
-    backgroundColor: '#16a34a',
-    borderColor: '#16a34a',
-  },
-  toggleText: {
-    color: '#6b7280',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  toggleTextActive: {
-    color: '#ffffff',
   },
   ratingsTable: {
     backgroundColor: '#1a1a1a',

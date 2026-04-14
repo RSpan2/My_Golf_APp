@@ -44,7 +44,7 @@ export default function CourseDetailScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={10}>
+        <Pressable onPress={() => router.back()} hitSlop={10} style={styles.headerBack}>
           <Ionicons name="chevron-back" size={24} color="#ffffff" />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>
@@ -85,6 +85,39 @@ export default function CourseDetailScreen() {
               <Text style={styles.summaryLabel}>{displayTeeLabel} Yds</Text>
             </View>
           </View>
+
+          {/* Ratings strip — only shown when ratings exist */}
+          {(() => {
+            const TEE_META: { key: Tee; label: string; color: string }[] = [
+              { key: 'blue', label: 'Blue', color: '#3b82f6' },
+              { key: 'white', label: 'White', color: '#e5e7eb' },
+              { key: 'red', label: 'Red', color: '#ef4444' },
+              { key: 'gold', label: 'Gold', color: '#facc15' },
+            ];
+            const ratedTees = TEE_META.filter(({ key }) => course.ratings[key]);
+            if (ratedTees.length === 0) return null;
+            return (
+              <View style={styles.ratingsStrip}>
+                <Text style={styles.ratingsStripLabel}>Ratings</Text>
+                <View style={styles.ratingsStripRows}>
+                  {ratedTees.map(({ key, label, color }) => {
+                    const r = course.ratings[key]!;
+                    return (
+                      <View key={key} style={styles.ratingsStripRow}>
+                        <View style={[styles.ratingDot, { backgroundColor: color }]} />
+                        <Text style={styles.ratingTeeName}>{label}</Text>
+                        <Text style={styles.ratingValue}>
+                          {r.courseRating.toFixed(1)}
+                        </Text>
+                        <Text style={styles.ratingSlash}>/</Text>
+                        <Text style={styles.ratingValue}>{r.slope}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
+              </View>
+            );
+          })()}
 
           {/* Column headers */}
           <View style={styles.columnHeader}>
@@ -191,6 +224,57 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   headerBtn: {},
+  headerBack: {
+    width: 56,
+  },
+  ratingsStrip: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: '#111111',
+    borderBottomWidth: 1,
+    borderBottomColor: '#2a2a2a',
+    gap: 12,
+  },
+  ratingsStripLabel: {
+    color: '#4b5563',
+    fontSize: 11,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+    paddingTop: 2,
+    width: 58,
+  },
+  ratingsStripRows: {
+    flex: 1,
+    gap: 4,
+  },
+  ratingsStripRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  ratingDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  ratingTeeName: {
+    color: '#9ca3af',
+    fontSize: 13,
+    fontWeight: '500',
+    width: 38,
+  },
+  ratingValue: {
+    color: '#ffffff',
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  ratingSlash: {
+    color: '#4b5563',
+    fontSize: 13,
+  },
   summaryStrip: {
     flexDirection: 'row',
     backgroundColor: '#111111',

@@ -120,45 +120,50 @@ Hierarchy: **Epic → Story → Task → Step** (smallest unit)
 
 ---
 
-## Story 1.3: User can start a new round
+## Story 1.3: User can start a new round ✅
 
 ### Task 1.3.1: Define Round and HoleScore types (`constants/round.ts`)
 > *As a developer, I want a shared Round and HoleScore type so that scoring, storage, and history all work with the same data shape.*
-- [ ] Create `constants/round.ts` file
-- [ ] Define `HoleScore` interface: `hole`, `par`, `yardage`, `score`, `putts?`, `fairwayHit?`, `adjustedScore?`
-- [ ] Define `Round` interface: `id`, `courseId`, `courseName`, `date`, `tee`, `holes`, `shotTrackingEnabled`, `conditions?`
-- [ ] Export all types
+- [x] Create `constants/round.ts` file
+- [x] Define `HoleScore` interface: `hole`, `par`, `yardage`, `score`, `putts?`, `fairwayHit?`, `adjustedScore?`
+- [x] Define `Round` interface: `id`, `courseId`, `courseName`, `date`, `tee`, `holes`, `shotTrackingEnabled`, `isComplete`
+- [x] Export all types
 
 ### Task 1.3.2: Add round persistence to storage service
 > *As a golfer, I want my in-progress and completed rounds saved to my device so that data is never lost if I close the app.*
-- [ ] Add `loadRounds(): Promise<Round[]>` to `courseStorage.ts`
-- [ ] Add `saveRound(round: Round): Promise<void>` — upsert by id
-- [ ] Add `deleteRound(id: string): Promise<void>`
-- [ ] Add `loadInProgressRound(): Promise<Round | null>` — separate key for active round
-- [ ] Add `saveInProgressRound(round: Round | null): Promise<void>`
+- [x] Create `services/roundStorage.ts` (separate from courseStorage for clean separation)
+- [x] Add `loadRounds(): Promise<Round[]>`
+- [x] Add `saveRound(round: Round): Promise<void>` — upsert by id
+- [x] Add `getRoundById(id: string): Promise<Round | undefined>`
+- [x] Add `deleteRound(id: string): Promise<void>`
+- [x] Add `loadInProgressRound(): Promise<Round | null>` — separate AsyncStorage key
+- [x] Add `saveInProgressRound(round: Round): Promise<void>`
+- [x] Add `clearInProgressRound(): Promise<void>`
 
 ### Task 1.3.3: Build Start Round screen (`app/round/new.tsx`)
 > *As a golfer, I want to pick a course and tee color before starting a round so that my scorecard shows the correct yardages and par for every hole.*
-- [ ] Create `app/round/new.tsx` file
-- [ ] Load saved courses on mount
-- [ ] Render course picker list (cards, tap to select, highlight selected)
-- [ ] Show empty state if no courses saved with link to add one
-- [ ] Add tee color selector row: Blue / White / Red / Gold (tap to select)
-- [ ] Auto-hide tee options that have no yardages entered on the course
-- [ ] Date field defaulting to today (display only for now)
-- [ ] "Shot Tracking" toggle (off by default, persists last value)
-- [ ] "Start Round" button (disabled until course + tee selected)
-- [ ] On start: build `Round` object with empty `HoleScore[]` for each hole
-- [ ] Save to `inProgressRound` in AsyncStorage
-- [ ] Navigate to `app/round/[id].tsx`
-- [ ] Style with `StyleSheet` matching design system
+- [x] Create `app/round/new.tsx` file
+- [x] Load saved courses on mount
+- [x] Render course picker list (cards, tap to select, highlight selected)
+- [x] Show empty state if no courses saved
+- [x] Add tee color selector: Blue / White / Red / Gold (auto-hide tees with no yardages; show all if none set)
+- [x] Date field defaulting to today (YYYY-MM-DD, editable for logging older rounds)
+- [x] Shot tracking toggle hidden — deferred to Epic 3
+- [x] "Start Round" button disabled until course + tee selected
+- [x] On start: build `Round` object with `HoleScore[]` for each hole, save to in-progress store
+- [x] Navigate to `app/round/[id].tsx`
+- [x] Style with `StyleSheet` matching design system
 
 ### Task 1.3.4: Prompt to resume in-progress round
 > *As a golfer, I want to be prompted to resume my round if I close the app mid-round so that I don't lose any scores I've already entered.*
-- [ ] On app launch in `app/(tabs)/index.tsx`, check `loadInProgressRound()`
-- [ ] If found, show "Resume Round" banner with course name and date
-- [ ] "Resume" button → navigate to `app/round/[id].tsx`
-- [ ] "Discard" button → clear in-progress round and dismiss banner
+- [x] Rewrite `app/(tabs)/index.tsx` as proper Home screen
+- [x] Check `loadInProgressRound()` on tab focus with `useFocusEffect`
+- [x] Show green resume banner with course name, date, and "In progress" label
+- [x] "Resume" button → navigate to scorecard
+- [x] Dismiss (×) button → `clearInProgressRound` and hide banner
+- [x] Stats row placeholder (populated in Story 1.6)
+- [x] "Start Round" CTA button → `/round/new`
+- [x] Recent rounds placeholder (populated in Story 1.6)
 
 ---
 
@@ -781,3 +786,4 @@ Hierarchy: **Epic → Story → Task → Step** (smallest unit)
 
 - **Story 1.1** — User can create a golf course (`constants/course.ts`, `services/courseStorage.ts`, `app/(tabs)/courses.tsx`, `app/course/new.tsx`, `app/course/[id].tsx`)
 - **Story 1.2** — User can view and edit hole details (`components/course/HoleEditor.tsx`, `app/course/[id].tsx` full impl, `app/course/edit/[id].tsx`)
+- **Story 1.3** — User can start a new round (`constants/round.ts`, `services/roundStorage.ts`, `app/round/new.tsx`, `app/(tabs)/index.tsx` home screen)

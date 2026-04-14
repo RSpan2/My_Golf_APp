@@ -65,7 +65,7 @@ export default function ClubsScreen() {
                   key={club.id}
                   club={club}
                   entry={clubData[club.id]}
-                  onPress={() => router.push(`/club/${club.id}`)}
+                  onPress={() => router.push({ pathname: '/club/[id]', params: { id: club.id } })}
                 />
               ))}
             </View>

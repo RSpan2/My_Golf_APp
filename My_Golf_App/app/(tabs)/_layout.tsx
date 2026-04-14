@@ -7,7 +7,7 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: '#111827', borderTopColor: '#374151' },
+        tabBarStyle: { backgroundColor: '#111111', borderTopColor: '#2a2a2a' },
         tabBarActiveTintColor: '#16a34a',
         tabBarInactiveTintColor: '#6b7280',
       }}
@@ -27,6 +27,15 @@ export default function TabLayout() {
           title: 'Clubs',
           tabBarIcon: ({ color, size }) => (
             <Ionicons name="golf-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="courses"
+        options={{
+          title: 'Courses',
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="map-outline" size={size} color={color} />
           ),
         }}
       />

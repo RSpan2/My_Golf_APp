@@ -11,13 +11,14 @@ Expo React Native app built with TypeScript, NativeWind, and Expo Router. These 
 3. [Naming Conventions](#naming-conventions)
 4. [Component Structure](#component-structure)
 5. [Styling](#styling)
-6. [State Management](#state-management)
-7. [Data Fetching](#data-fetching)
-8. [Navigation & Routing](#navigation--routing)
-9. [Imports](#imports)
-10. [Error Handling & Loading States](#error-handling--loading-states)
-11. [Code Organization](#code-organization)
-12. [Configuration](#configuration)
+6. [Visual Design System](#visual-design-system)
+7. [State Management](#state-management)
+8. [Data Fetching](#data-fetching)
+9. [Navigation & Routing](#navigation--routing)
+10. [Imports](#imports)
+11. [Error Handling & Loading States](#error-handling--loading-states)
+12. [Code Organization](#code-organization)
+13. [Configuration](#configuration)
 
 ---
 
@@ -122,24 +123,132 @@ export default ScoreCard;
 
 ## Styling
 
-- Use **NativeWind utility classes** for all layout and styling. Avoid custom `StyleSheet.create` unless a style cannot be expressed with Tailwind utilities.
-- Use inline `style` props only for computed/dynamic values (e.g., pixel dimensions, animated transform values).
-- Maintain a consistent dark theme. Use the configured background color across screens.
-- Stick to the Tailwind color palette — do not hard-code hex values unless they are in `tailwind.config.js`.
+- Use **`StyleSheet.create`** for all screen-level and feature component styling. NativeWind `className` props are unreliable in Expo Go (styles silently fail to apply), so `StyleSheet` is the safe default.
+- Use NativeWind `className` only for simple, text-level utilities (e.g., `font-bold`, `text-center`) where a StyleSheet entry would add noise. Never rely on `className` for background colors, borders, or layout on container views.
+- Use inline `style` props only for pressed-state callbacks and truly computed/dynamic values.
+- Do not hard-code hex colors inline — reference the palette constants in the [Visual Design System](#visual-design-system) section below.
 
 ```typescript
-// Good — NativeWind classes
-<View className="flex-1 bg-gray-950 px-4">
-  <Text className="text-white text-lg font-semibold">Player Name</Text>
-</View>
+// Good — StyleSheet for containers and cards
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 16,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+});
+<View style={styles.card} />
 
-// Acceptable — computed dimension only
-<Image style={{ width: 48, height: 48 }} source={{ uri: logoUrl }} />
+// Acceptable — pressed-state inline callback
+<Pressable style={({ pressed }) => [styles.chip, pressed && styles.chipPressed]} />
 
-// Avoid — mixing StyleSheet and NativeWind unnecessarily
-const styles = StyleSheet.create({ container: { padding: 16 } });
-<View style={styles.container} className="bg-gray-950" />
+// Avoid — NativeWind for background/border/layout (unreliable in Expo Go)
+<View className="bg-gray-900 rounded-xl border border-gray-800" />
 ```
+
+---
+
+## Visual Design System
+
+All screens share a single dark theme. Use these values exclusively — do not introduce new colors without updating this section.
+
+### Color Palette
+
+| Token | Hex | Usage |
+|---|---|---|
+| `bg-page` | `#0d0d0d` | Screen/page background |
+| `bg-header` | `#111111` | Header bars |
+| `bg-card` | `#1a1a1a` | Card backgrounds |
+| `bg-chip` | `#242424` | Stat chip backgrounds |
+| `bg-chip-pressed` | `#2e2e2e` | Stat chip pressed state |
+| `bg-badge` | `#1e3a2f` | Short-name badge background |
+| `border-subtle` | `#2a2a2a` | Card and header borders |
+| `text-primary` | `#ffffff` | Club names, values, headings |
+| `text-muted` | `#6b7280` | Stat labels, empty states |
+| `text-hint` | `#4b5563` | Placeholder / hint text |
+| `text-section` | `#16a34a` | Section headers (green) |
+| `text-badge` | `#4ade80` | Badge text (green-400) |
+| `icon-muted` | `#9ca3af` | Secondary icons (settings, etc.) |
+| `icon-empty` | `#374151` | Empty-state icons |
+
+### Screen Layout Pattern
+
+Every screen follows this shell:
+
+```typescript
+<SafeAreaView style={{ flex: 1, backgroundColor: '#0d0d0d' }} edges={['top']}>
+  {/* Header */}
+  <View style={{
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    paddingHorizontal: 16, paddingTop: 16, paddingBottom: 12,
+    backgroundColor: '#111111', borderBottomWidth: 1, borderBottomColor: '#2a2a2a',
+  }}>
+    <Text style={{ color: '#ffffff', fontSize: 20, fontWeight: '700' }}>Title</Text>
+  </View>
+
+  {/* Content */}
+  <ScrollView style={{ flex: 1 }}>
+    {/* Section header */}
+    <Text style={{
+      color: '#16a34a', fontSize: 11, fontWeight: '600',
+      textTransform: 'uppercase', letterSpacing: 1.2,
+      paddingHorizontal: 16, paddingTop: 20, paddingBottom: 8,
+    }}>
+      Section Name
+    </Text>
+
+    {/* Cards */}
+  </ScrollView>
+</SafeAreaView>
+```
+
+### Card Pattern
+
+```typescript
+<View style={{
+  backgroundColor: '#1a1a1a',
+  borderRadius: 16,
+  marginHorizontal: 20,
+  marginBottom: 12,
+  borderWidth: 1,
+  borderColor: '#2a2a2a',
+}}>
+  <View style={{ paddingHorizontal: 16, paddingVertical: 14 }}>
+    {/* Card header: title left, badge right */}
+    <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+      <Text style={{ color: '#ffffff', fontSize: 16, fontWeight: '700' }}>Name</Text>
+      <View style={{ backgroundColor: '#1e3a2f', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2 }}>
+        <Text style={{ color: '#4ade80', fontSize: 12, fontWeight: '600' }}>Badge</Text>
+      </View>
+    </View>
+
+    {/* Tappable stat chips */}
+    <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 }}>
+      <Pressable style={({ pressed }) => ({
+        backgroundColor: pressed ? '#2e2e2e' : '#242424',
+        borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8,
+      })}>
+        <Text style={{ color: '#6b7280', fontSize: 11 }}>Label</Text>
+        <Text style={{ color: '#ffffff', fontSize: 14, fontWeight: '600' }}>Value</Text>
+      </Pressable>
+    </View>
+  </View>
+</View>
+```
+
+### Typography Scale
+
+| Role | Size | Weight | Color |
+|---|---|---|---|
+| Screen title | 20 | 700 | `#ffffff` |
+| Card title | 16 | 700 | `#ffffff` |
+| Section header | 11 | 600 | `#16a34a` |
+| Chip value | 14 | 600 | `#ffffff` |
+| Chip label | 11 | 400 | `#6b7280` |
+| Badge text | 12 | 600 | `#4ade80` |
+| Body / list item | 14–16 | 400 | `#ffffff` |
+| Muted / hint | 13–16 | 400 | `#6b7280` or `#4b5563` |
 
 ---
 

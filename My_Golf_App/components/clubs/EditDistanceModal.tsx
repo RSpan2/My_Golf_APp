@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Modal, Pressable, Text, TextInput, View } from 'react-native';
+import { Modal, Pressable, StyleSheet, Text, TextInput, View } from 'react-native';
 
 interface EditDistanceModalProps {
   visible: boolean;
@@ -37,39 +37,37 @@ const EditDistanceModal = ({
       onShow={handleOpen}
       onRequestClose={onClose}
     >
-      <Pressable className="flex-1 bg-black/60 justify-center items-center" onPress={onClose}>
-        <Pressable
-          className="bg-gray-900 rounded-2xl p-6 w-72 border border-gray-700"
-          onPress={() => {}}
-        >
-          <Text className="text-white text-lg font-semibold mb-1">{clubName}</Text>
-          <Text className="text-gray-400 text-sm mb-4">{statLabel} (yards)</Text>
+      <Pressable style={styles.overlay} onPress={onClose}>
+        <Pressable style={styles.card} onPress={() => {}}>
+          <Text style={styles.clubName}>{clubName}</Text>
+          <Text style={styles.statLabel}>{statLabel} (yards)</Text>
 
           <TextInput
-            className="bg-gray-800 text-white text-center text-2xl font-bold rounded-lg py-3 px-4 mb-5"
+            style={styles.input}
             keyboardType="number-pad"
             value={input}
             onChangeText={setInput}
             onSubmitEditing={handleSave}
             returnKeyType="done"
             placeholder="—"
-            placeholderTextColor="#6b7280"
+            placeholderTextColor="#4b5563"
             maxLength={4}
             autoFocus
+            textAlign="center"
           />
 
-          <View className="flex-row gap-2">
+          <View style={styles.buttonRow}>
             <Pressable
-              className="flex-1 py-3 rounded-lg bg-gray-700 items-center active:bg-gray-600"
+              style={({ pressed }) => [styles.btn, styles.btnClear, pressed && styles.btnClearPressed]}
               onPress={() => { setInput(''); onSave(undefined); }}
             >
-              <Text className="text-gray-300 font-medium">Clear</Text>
+              <Text style={styles.btnClearText}>Clear</Text>
             </Pressable>
             <Pressable
-              className="flex-1 py-3 rounded-lg bg-green-700 items-center active:bg-green-600"
+              style={({ pressed }) => [styles.btn, styles.btnSave, pressed && styles.btnSavePressed]}
               onPress={handleSave}
             >
-              <Text className="text-white font-semibold">Enter</Text>
+              <Text style={styles.btnSaveText}>Save</Text>
             </Pressable>
           </View>
         </Pressable>
@@ -79,3 +77,75 @@ const EditDistanceModal = ({
 };
 
 export default EditDistanceModal;
+
+const styles = StyleSheet.create({
+  overlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.7)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  card: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    padding: 24,
+    width: 300,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  clubName: {
+    color: '#ffffff',
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  statLabel: {
+    color: '#6b7280',
+    fontSize: 13,
+    marginBottom: 20,
+  },
+  input: {
+    backgroundColor: '#242424',
+    color: '#ffffff',
+    fontSize: 36,
+    fontWeight: '700',
+    borderRadius: 12,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: '#2a2a2a',
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  btn: {
+    flex: 1,
+    paddingVertical: 14,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  btnClear: {
+    backgroundColor: '#242424',
+  },
+  btnClearPressed: {
+    backgroundColor: '#2e2e2e',
+  },
+  btnClearText: {
+    color: '#9ca3af',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+  btnSave: {
+    backgroundColor: '#16a34a',
+  },
+  btnSavePressed: {
+    backgroundColor: '#15803d',
+  },
+  btnSaveText: {
+    color: '#ffffff',
+    fontSize: 15,
+    fontWeight: '600',
+  },
+});
